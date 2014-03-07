@@ -223,7 +223,7 @@ class PeopleTracker(EventTracker):
         mp_key = self.event_map[event]
         params = {
             '$token': properties['token'],
-            'ip': properties['ip'],
+            '$ip': properties['ip'],
             '$distinct_id': properties['distinct_id'],
         }
         if event == 'track_charge':
@@ -242,7 +242,7 @@ class PeopleTracker(EventTracker):
             # rest for passing with $set and $increment
             params[mp_key] = dict(
                 (k, v) for (k, v) in properties.iteritems()
-                if not k in ('token', 'distinct_id')
+                if not k in ('token', 'distinct_id', 'ip')
             )
 
         return self._encode_params(params, is_test)
