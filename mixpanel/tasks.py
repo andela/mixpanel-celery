@@ -27,7 +27,7 @@ class EventTracker(Task):
         """
 
     def run(
-        self, event_name, properties=None, token=None, test=None, **kwargs
+        self, event_name, properties=None, token=None, ip=None, test=None, **kwargs
     ):
         """
         Track an event occurrence to mixpanel through the API.
@@ -58,7 +58,7 @@ class EventTracker(Task):
             httplib.HTTPConnection.debuglevel = 1
 
         is_test = self._is_test(test)
-        generated_properties = self._handle_properties(properties, token)
+        generated_properties = self._handle_properties(properties, token, ip)
 
         url_params = self._build_params(
             event_name,
@@ -103,7 +103,7 @@ class EventTracker(Task):
             return 1
         return 0
 
-    def _handle_properties(self, properties, token):
+    def _handle_properties(self, properties, token, ip):
         """
         Build a properties dictionary, accounting for the token.
         """
@@ -114,6 +114,11 @@ class EventTracker(Task):
             if token is None:
                 token = mp_settings.MIXPANEL_API_TOKEN
             properties['token'] = token
+            
+        if not properties.get('ip', None):
+            if ip is None:
+                ip = 0
+            properties['ip'] = ip
 
         l = self.get_logger()
         l.debug('pre-encoded properties: <%s>' % repr(properties))
@@ -186,7 +191,7 @@ class PeopleTracker(EventTracker):
     }
 
     def run(
-        self, event_name, properties=None, token=None, test=None, **kwargs
+        self, event_name, properties=None, token=None, ip=None, test=None, **kwargs
     ):
         """
         Track an People event occurrence to mixpanel through the API.
@@ -206,6 +211,7 @@ class PeopleTracker(EventTracker):
             event_name,
             properties=properties,
             token=token,
+            ip=ip,
             test=test,
             **kwargs
         )
@@ -217,6 +223,7 @@ class PeopleTracker(EventTracker):
         mp_key = self.event_map[event]
         params = {
             '$token': properties['token'],
+            'ip': properties['ip'],
             '$distinct_id': properties['distinct_id'],
         }
         if event == 'track_charge':
